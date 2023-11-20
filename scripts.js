@@ -1,8 +1,10 @@
 // Set the date we're counting down to
-//let countDownDate = new Date("December 31, 2023 23:59:59").getTime();
+//let countDownDate = new Date('December 31, 2023 23:59:59').getTime();
+
+let timerTheme = 0;
 
 let countDownDate = 0;
-document.getElementById("dateInput").addEventListener("change", function() {
+document.getElementById('dateInput').addEventListener('change', function() {
     let input = this.value;
     countDownDate = new Date(input).getTime();
     
@@ -24,17 +26,41 @@ document.getElementById("dateInput").addEventListener("change", function() {
         let milliseconds = ((distance % 1000) / 100).toFixed(1);
     
         // Display the countdown
-        document.getElementById("weeks").innerHTML = weeks + " Weeks";
-        document.getElementById("days").innerHTML = days + " Days";
-        document.getElementById("hours").innerHTML = hours + " Hours";
-        document.getElementById("minutes").innerHTML = minutes + " Minutes";
-        document.getElementById("seconds").innerHTML = seconds + " Seconds";
-        document.getElementById("milliseconds").innerHTML = milliseconds + " Milliseconds";
-    
-        // If the countdown is over, display a message
-        if (distance < 0) {
-        clearInterval(countdownInterval);
-        document.getElementById("countdown").innerHTML = "EXPIRED";
+        if (timerTheme === 0) {
+            document.getElementById('weeks').innerHTML = weeks + " Weeks";
+            document.getElementById('days').innerHTML = days + " Days";
+            document.getElementById('hours').innerHTML = hours + " Hours";
+            document.getElementById('minutes').innerHTML = minutes + " Minutes";
+            document.getElementById('seconds').innerHTML = seconds + " Seconds";
+            document.getElementById('milliseconds').innerHTML = milliseconds + " Milliseconds";
+        }
+        else {
+            document.getElementById('fullTime').innerHTML = weeks + ":" + days + ":" + hours + ":" + minutes + ":" + seconds + ":" + milliseconds;
         }
     }, 1); // Update every 1 millisecond
 });
+
+function changeTheme() {
+    if (timerTheme === 0) {
+        timerTheme++;
+        document.getElementById('weeks').innerHTML = "";
+        document.getElementById('days').innerHTML = "";
+        document.getElementById('hours').innerHTML = "";
+        document.getElementById('minutes').innerHTML = "";
+        document.getElementById('seconds').innerHTML = "";
+        document.getElementById('milliseconds').innerHTML = "";
+        localStorage('timerTheme', timerTheme);
+    }
+    else {
+        timerTheme--;
+        document.getElementById('fullTime').innerHTML = "";
+        localStorage.setItem('timerTheme', timerTheme);
+    }
+}
+
+function loadOptions() {
+    timerTheme = JSON.parse(localStorage.getItem('timerTheme'));
+    console.log("Timer theme is set to: " + timerTheme);
+}
+
+window.addEventListener('load', loadOptions);
