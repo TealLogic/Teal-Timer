@@ -59,6 +59,15 @@ function changeTheme() {
     }
 }
 
+function toggleColorMode() {
+    const darkModeButton = document.getElementById('darkModeButton');
+    const lightModeButton = document.getElementById('lightModeButton');
+
+    document.body.classList.toggle('darkMode');
+    darkModeButton.classList.toggle('show');
+    lightModeButton.classList.toggle('show');
+}
+
 function loadOptions() {
     timerTheme = JSON.parse(localStorage.getItem('timerTheme'));
     console.log("Timer theme is set to: " + timerTheme);

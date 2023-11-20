@@ -31,6 +31,29 @@ button:active {
 
 #themeButton {
     position: absolute;
-    top: 1rem;
+    top: 3.4rem;
     right: 1rem;
+}
+
+#darkModeButton {
+    visibility: hidden;
+    position: absolute;
+    top: 1rem;
+    right: 1.8rem;
+}
+
+#lightModeButton {
+    visibility: hidden;
+    position: absolute;
+    top: 1rem;
+    right: 1.8rem;
+}
+
+.darkMode {
+    background-color: black;
+    color: white;
+}
+
+.show {
+    visibility: visible;
 }
