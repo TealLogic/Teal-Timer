@@ -52,6 +52,7 @@ function changeTheme() {
         localStorage('timerTheme', timerTheme);
     }
     else {
+        timerTheme = 1;
         timerTheme--;
         document.getElementById('fullTime').innerHTML = "";
         localStorage.setItem('timerTheme', timerTheme);
