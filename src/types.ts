@@ -4,6 +4,8 @@ export interface Timer {
   description: string;
   targetDate: string;
   theme: TimerTheme;
+  themeColor?: string;
+  glowIntensity?: number;
 }
 
 export type TimerTheme = 'analog' | 'digital' | 'chronometer' | 'chronometer-analog' | 'calendar';

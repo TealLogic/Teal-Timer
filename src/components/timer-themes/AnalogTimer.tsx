@@ -4,9 +4,11 @@ import { PartyPopper } from 'lucide-react';
 
 interface AnalogTimerProps {
   targetDate: string;
+  themeColor: string;
+  glowIntensity: number;
 }
 
-function AnalogTimer({ targetDate }: AnalogTimerProps) {
+function AnalogTimer({ targetDate, themeColor, glowIntensity }: AnalogTimerProps) {
   const [timeLeft, setTimeLeft] = React.useState(getTimeRemaining(targetDate, false));
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const displaySize = 300;
@@ -42,9 +44,14 @@ function AnalogTimer({ targetDate }: AnalogTimerProps) {
     // Draw clock face
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 6;
     ctx.stroke();
+
+    if (glowIntensity > 0) {
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = glowIntensity * 20;
+    }
 
     // Draw hour markers
     for (let i = 0; i < 12; i++) {
@@ -60,17 +67,12 @@ function AnalogTimer({ targetDate }: AnalogTimerProps) {
         centerX + radius * Math.cos(angle - Math.PI / 2),
         centerY + radius * Math.sin(angle - Math.PI / 2)
       );
-      ctx.strokeStyle = '#20B2AA';
+      ctx.strokeStyle = themeColor;
       ctx.lineWidth = 4;
       ctx.stroke();
     }
 
     // Calculate angles for each hand
-    const totalSeconds = timeLeft.raw.days * 86400 + 
-                        timeLeft.raw.hours * 3600 + 
-                        timeLeft.raw.minutes * 60 + 
-                        timeLeft.raw.seconds;
-    
     const hoursAngle = ((timeLeft.raw.hours % 12) / 12) * 2 * Math.PI;
     const minutesAngle = (timeLeft.raw.minutes / 60) * 2 * Math.PI;
     const secondsAngle = (timeLeft.raw.seconds / 60) * 2 * Math.PI;
@@ -82,7 +84,7 @@ function AnalogTimer({ targetDate }: AnalogTimerProps) {
       centerX + radius * 0.5 * Math.cos(hoursAngle - Math.PI / 2),
       centerY + radius * 0.5 * Math.sin(hoursAngle - Math.PI / 2)
     );
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 8;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -94,7 +96,7 @@ function AnalogTimer({ targetDate }: AnalogTimerProps) {
       centerX + radius * 0.7 * Math.cos(minutesAngle - Math.PI / 2),
       centerY + radius * 0.7 * Math.sin(minutesAngle - Math.PI / 2)
     );
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -106,7 +108,7 @@ function AnalogTimer({ targetDate }: AnalogTimerProps) {
       centerX + radius * 0.9 * Math.cos(secondsAngle - Math.PI / 2),
       centerY + radius * 0.9 * Math.sin(secondsAngle - Math.PI / 2)
     );
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -114,18 +116,22 @@ function AnalogTimer({ targetDate }: AnalogTimerProps) {
     // Draw center dot
     ctx.beginPath();
     ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
-    ctx.fillStyle = '#20B2AA';
+    ctx.fillStyle = themeColor;
     ctx.fill();
-  }, [timeLeft]);
+  }, [timeLeft, themeColor, glowIntensity]);
 
   if (timeLeft.expired) {
     return (
-      <div className="text-6xl font-bold text-teal flex items-center justify-center gap-4">
+      <div className="text-6xl font-bold flex items-center justify-center gap-4" style={{ color: themeColor }}>
         <PartyPopper className="w-12 h-12" />
         Completed
       </div>
     );
   }
+
+  const glowStyle = {
+    filter: `drop-shadow(0 0 ${glowIntensity * 10}px ${themeColor})`,
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -136,7 +142,10 @@ function AnalogTimer({ targetDate }: AnalogTimerProps) {
         style={{ width: displaySize, height: displaySize }}
         className="mb-4"
       />
-      <div className="text-2xl font-bold text-teal">
+      <div 
+        className="text-2xl font-bold"
+        style={{ color: themeColor, ...glowStyle }}
+      >
         {timeLeft.display}
       </div>
     </div>

@@ -4,9 +4,11 @@ import { PartyPopper } from 'lucide-react';
 
 interface ChronometerAnalogTimerProps {
   targetDate: string;
+  themeColor: string;
+  glowIntensity: number;
 }
 
-function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
+function ChronometerAnalogTimer({ targetDate, themeColor, glowIntensity }: ChronometerAnalogTimerProps) {
   const [timeLeft, setTimeLeft] = React.useState(getTimeRemaining(targetDate, true));
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const displaySize = 300;
@@ -42,9 +44,14 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
     // Draw clock face
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 6;
     ctx.stroke();
+
+    if (glowIntensity > 0) {
+      ctx.shadowColor = themeColor;
+      ctx.shadowBlur = glowIntensity * 20;
+    }
 
     // Draw hour markers and numbers
     for (let i = 0; i < 60; i++) {
@@ -61,7 +68,7 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
         centerX + radius * Math.cos(angle - Math.PI / 2),
         centerY + radius * Math.sin(angle - Math.PI / 2)
       );
-      ctx.strokeStyle = '#20B2AA';
+      ctx.strokeStyle = themeColor;
       ctx.lineWidth = isHour ? 4 : 2;
       ctx.lineCap = 'round';
       ctx.stroke();
@@ -74,7 +81,7 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
         const textY = centerY + textRadius * Math.sin(angle - Math.PI / 2);
         
         ctx.font = '32px Varela Round';
-        ctx.fillStyle = '#20B2AA';
+        ctx.fillStyle = themeColor;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(number.toString(), textX, textY);
@@ -94,7 +101,7 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
       centerX + radius * 0.5 * Math.cos(hoursAngle - Math.PI / 2),
       centerY + radius * 0.5 * Math.sin(hoursAngle - Math.PI / 2)
     );
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 8;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -106,7 +113,7 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
       centerX + radius * 0.7 * Math.cos(minutesAngle - Math.PI / 2),
       centerY + radius * 0.7 * Math.sin(minutesAngle - Math.PI / 2)
     );
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 6;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -118,7 +125,7 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
       centerX + radius * 0.9 * Math.cos(secondsAngle - Math.PI / 2),
       centerY + radius * 0.9 * Math.sin(secondsAngle - Math.PI / 2)
     );
-    ctx.strokeStyle = '#20B2AA';
+    ctx.strokeStyle = themeColor;
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -130,7 +137,7 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
       centerX + radius * 0.95 * Math.cos(millisecondsAngle - Math.PI / 2),
       centerY + radius * 0.95 * Math.sin(millisecondsAngle - Math.PI / 2)
     );
-    ctx.strokeStyle = '#008B8B';
+    ctx.strokeStyle = themeColor + '80'; // Add transparency
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -138,18 +145,22 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
     // Draw center dot
     ctx.beginPath();
     ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
-    ctx.fillStyle = '#20B2AA';
+    ctx.fillStyle = themeColor;
     ctx.fill();
-  }, [timeLeft]);
+  }, [timeLeft, themeColor, glowIntensity]);
 
   if (timeLeft.expired) {
     return (
-      <div className="text-6xl font-bold text-teal flex items-center justify-center gap-4">
+      <div className="text-6xl font-bold flex items-center justify-center gap-4" style={{ color: themeColor }}>
         <PartyPopper className="w-12 h-12" />
         Completed
       </div>
     );
   }
+
+  const glowStyle = {
+    filter: `drop-shadow(0 0 ${glowIntensity * 10}px ${themeColor})`,
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -160,7 +171,10 @@ function ChronometerAnalogTimer({ targetDate }: ChronometerAnalogTimerProps) {
         style={{ width: displaySize, height: displaySize }}
         className="mb-4"
       />
-      <div className="text-2xl font-bold text-teal">
+      <div 
+        className="text-2xl font-bold"
+        style={{ color: themeColor, ...glowStyle }}
+      >
         {timeLeft.display}
       </div>
     </div>

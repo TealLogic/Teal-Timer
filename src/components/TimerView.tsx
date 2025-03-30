@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Camera, Edit, Save, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Camera, Edit, Save, Trash2, X, Palette, RotateCcw } from 'lucide-react';
 import { Timer } from '../types';
 import { getTimeRemaining } from '../utils/timeUtils';
 import DigitalTimer from './timer-themes/DigitalTimer';
@@ -17,14 +17,21 @@ interface TimerViewProps {
   onDelete: (id: string) => void;
 }
 
+const DEFAULT_THEME_COLOR = '#20B2AA';
+const DEFAULT_GLOW_INTENSITY = 0;
+
 function TimerView({ timerId, timers, onBack, onUpdate, onDelete }: TimerViewProps) {
   const timer = timers.find((t) => t.id === timerId);
   const [isEditing, setIsEditing] = React.useState(false);
   const [editedTimer, setEditedTimer] = React.useState(timer);
   const [deleteModal, setDeleteModal] = React.useState(false);
+  const [showThemeEditor, setShowThemeEditor] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   if (!timer) return null;
+
+  const currentThemeColor = timer.themeColor || DEFAULT_THEME_COLOR;
+  const currentGlowIntensity = timer.glowIntensity ?? DEFAULT_GLOW_INTENSITY;
 
   const handleSave = () => {
     if (editedTimer) {
@@ -33,39 +40,45 @@ function TimerView({ timerId, timers, onBack, onUpdate, onDelete }: TimerViewPro
     }
   };
 
+  const handleThemeUpdate = (color: string, glowIntensity: number) => {
+    const updatedTimer = {
+      ...timer,
+      themeColor: color,
+      glowIntensity,
+    };
+    onUpdate(updatedTimer);
+  };
+
+  const handleResetTheme = () => {
+    const updatedTimer = {
+      ...timer,
+      themeColor: DEFAULT_THEME_COLOR,
+      glowIntensity: DEFAULT_GLOW_INTENSITY,
+    };
+    onUpdate(updatedTimer);
+  };
+
   const handleScreenshot = async () => {
     if (!containerRef.current) return;
     
     try {
       const { toPng } = await import('html-to-image');
-
-      // Load the font first
-      const font = await new FontFace(
-        'Varela Round',
-        'url(https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfp8uP.woff2)'
-      ).load();
       
-      document.fonts.add(font);
-      await document.fonts.ready;
+      const scale = 2;
+      const style = {
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        width: `${100 / scale}%`,
+        height: `${100 / scale}%`,
+      };
 
       const dataUrl = await toPng(containerRef.current, {
         quality: 1.0,
         pixelRatio: 3,
         backgroundColor: document.documentElement.classList.contains('dark') ? 'rgb(3, 7, 18)' : '#ffffff',
-        fontEmbedCSS: `
-          @font-face {
-            font-family: 'Varela Round';
-            font-style: normal;
-            font-weight: 400;
-            src: url(https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfp8uP.woff2) format('woff2');
-            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-          }
-        `,
-        canvasWidth: containerRef.current.offsetWidth * 2,
-        canvasHeight: containerRef.current.offsetHeight * 2,
-        style: {
-          fontFamily: "'Varela Round', sans-serif",
-        }
+        width: containerRef.current.offsetWidth * scale,
+        height: containerRef.current.offsetHeight * scale,
+        style,
       });
       
       const link = document.createElement('a');
@@ -78,19 +91,25 @@ function TimerView({ timerId, timers, onBack, onUpdate, onDelete }: TimerViewPro
   };
 
   const renderTimer = () => {
+    const props = {
+      targetDate: timer.targetDate,
+      themeColor: currentThemeColor,
+      glowIntensity: currentGlowIntensity,
+    };
+
     switch (timer.theme) {
       case 'digital':
-        return <DigitalTimer targetDate={timer.targetDate} />;
+        return <DigitalTimer {...props} />;
       case 'analog':
-        return <AnalogTimer targetDate={timer.targetDate} />;
+        return <AnalogTimer {...props} />;
       case 'chronometer':
-        return <ChronometerTimer targetDate={timer.targetDate} />;
+        return <ChronometerTimer {...props} />;
       case 'chronometer-analog':
-        return <ChronometerAnalogTimer targetDate={timer.targetDate} />;
+        return <ChronometerAnalogTimer {...props} />;
       case 'calendar':
-        return <CalendarTimer targetDate={timer.targetDate} />;
+        return <CalendarTimer {...props} />;
       default:
-        return <DigitalTimer targetDate={timer.targetDate} />;
+        return <DigitalTimer {...props} />;
     }
   };
 
@@ -131,7 +150,56 @@ function TimerView({ timerId, timers, onBack, onUpdate, onDelete }: TimerViewPro
       </div>
 
       {/* Timer Content */}
-      <div ref={containerRef} className="p-8 bg-gray-800 rounded-lg shadow-lg">
+      <div ref={containerRef} className="p-8 bg-gray-800 rounded-lg shadow-lg relative">
+        {/* Theme Editor Button */}
+        <button
+          onClick={() => setShowThemeEditor(!showThemeEditor)}
+          className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-700 hover:shadow-glow transition-all duration-300"
+          style={{ zIndex: 10 }}
+        >
+          <Palette className="w-5 h-5 text-gray-300" />
+        </button>
+
+        {/* Theme Editor Panel */}
+        {showThemeEditor && (
+          <div className="absolute top-16 right-4 bg-gray-800 rounded-lg p-4 shadow-lg border border-gray-700 z-20">
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Color
+                </label>
+                <input
+                  type="color"
+                  value={currentThemeColor}
+                  onChange={(e) => handleThemeUpdate(e.target.value, currentGlowIntensity)}
+                  className="w-full h-10 rounded cursor-pointer"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Glow Intensity
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  value={currentGlowIntensity}
+                  onChange={(e) => handleThemeUpdate(currentThemeColor, parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              <button
+                onClick={handleResetTheme}
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-700 rounded-md hover:bg-gray-600 transition-colors text-sm text-gray-300"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Reset to Default
+              </button>
+            </div>
+          </div>
+        )}
+
         {isEditing ? (
           <div className="space-y-4">
             <input
@@ -179,7 +247,11 @@ function TimerView({ timerId, timers, onBack, onUpdate, onDelete }: TimerViewPro
             <p className="text-gray-300 mb-8">
               {timer.description}
             </p>
-            {renderTimer()}
+            <div className="flex justify-center">
+              <div className="aspect-square w-fit">
+                {renderTimer()}
+              </div>
+            </div>
           </div>
         )}
       </div>
